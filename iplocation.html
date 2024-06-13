@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location and Languages</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+p {
+    margin: 5px 0;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="heading">User Information</h1>
+        <p id="country"></p>
+        <p id="languages"></p>
+    </div>
+    <script>
+        // Function to fetch location based on IP
+async function fetchLocation() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const country = data.country_name;
+        const countryCode = data.country_code;
+
+        document.getElementById('country').innerText = `Country: ${country}`;
+
+        // Fetch languages spoken in the country
+        fetchLanguages(countryCode);
+    } catch (error) {
+        console.error('Error fetching location:', error);
+    }
+}
+
+// Function to fetch languages based on country code
+async function fetchLanguages(countryCode) {
+    try {
+        const response = await fetch(`https://restcountries.com/v3.1/alpha/${countryCode}`);
+        const data = await response.json();
+        const languages = data[0].languages;
+        const languageList = Object.values(languages).join(', ');
+
+        document.getElementById('languages').innerText = `Languages: ${languageList}`;
+
+        // Translate the heading to the first language in the list
+        const primaryLanguage = Object.values(languages)[0];
+        translateText('User Information', primaryLanguage);
+    } catch (error) {
+        console.error('Error fetching languages:', error);
+    }
+}
+
+// Function to translate text using Google Translate API
+async function translateText(text, targetLanguage) {
+    try {
+        const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=YOUR_API_KEY`, {
+            method: 'POST',
+            body: JSON.stringify({
+                q: text,
+                target: targetLanguage
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        const translatedText = data.data.translations[0].translatedText;
+        document.getElementById('heading').innerText = translatedText;
+    } catch (error) {
+        console.error('Error translating text:', error);
+    }
+}
+
+// Call the function to fetch location on page load
+fetchLocation();
+
+    </script>
+</body>
+</html>
